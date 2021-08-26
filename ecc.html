@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="form-group">
+    <label>y^2=x^3+a*x (mod p)</label>
+    </p>
+    <input type="text"  id="a" placeholder="a" >
+    <input type="text"  id="p" placeholder="p" >
+</div>
+<label>-----------------------------------------------------------------------------</label>
+<div class="form-group">
+    <input type="text"  id="multiply_x" placeholder="x" >
+    <input type="text"  id="multiply_y" placeholder="y" >
+</div>
+</p>
+<div class="form-group">
+    <input type="text" id="multiply_times" placeholder="times" >
+</div>
+</p>
+<input  type="button" value="multiply" id="multiply_button" onclick="multiply_button();">
+</p>
+<label>-----------------------------------------------------------------------------</label>
+<div class="form-group">
+    <input type="text"  id="add_Px" placeholder="x" >
+    <input type="text"  id="add_Py" placeholder="y" >
+</div>
+</p>
+<div class="form-group">
+    <input type="text"  id="add_Qx" placeholder="x" >
+    <input type="text"  id="add_Qy" placeholder="y" >
+</div>
+</p>
+<input  type="button" value="add" id="add_button" onclick="add_button();">
+</p>
+</p>
+<td> <textarea name="mytext" id="textarea"  class="form-control" rows="6" cols="40" readonly="readonly"></textarea></td>
+</body>
+<script src="https://peterolson.github.io/BigInteger.js/BigInteger.min.js"></script>
+<script>
+    var a=bigInt(0);
+    var p=bigInt("290211853785183115027049675024779935529");
+    function multiply_button(){
+        a=bigInt(document.getElementById("a").value);
+        p=bigInt(document.getElementById("p").value);
+        const multiply_x = document.getElementById("multiply_x").value;
+        const multiply_y = document.getElementById("multiply_y").value;
+        const multiply_times = document.getElementById("multiply_times").value;
+        var answer=ecc_multiply(bigInt(multiply_times),bigInt(multiply_x),bigInt(multiply_y));
+        console.log(answer[0]);
+        console.log(answer[1]);
+        document.getElementById('textarea').innerHTML = answer[0].toString()+" , "+answer[1].toString();
+    }
+    function add_button(){
+        a=bigInt(document.getElementById("a").value);
+        p=bigInt(document.getElementById("p").value);
+        const add_Px = document.getElementById("add_Px").value;
+        const add_Py = document.getElementById("add_Py").value;
+        const add_Qx = document.getElementById("add_Qx").value;
+        const add_Qy = document.getElementById("add_Qy").value;
+        var answer=ecc_add(bigInt(add_Px),bigInt(add_Py),bigInt(add_Qx),bigInt(add_Qy));
+        console.log(answer[0]);
+        console.log(answer[1]);
+        document.getElementById('textarea').innerHTML = answer[0].toString()+" , "+answer[1].toString();
+    }
+    function ecc_multiply(n,Px,Py)
+    {
+        var Rx = bigInt(-1);
+        var Ry = bigInt(-1);
+        var R = [Rx, Ry];
+        var P = [Px, Py];
+        while (!n.equals(bigInt(0)))
+        {
+            if(n.mod(bigInt(2)).equals(bigInt(1))){// n%2==1
+                R=ecc_add(R[0],R[1],P[0],P[1]);
+            }
+            n=n.shiftRight(1);// n=n>>1
+            P=ecc_add(P[0],P[1],P[0],P[1]);
+        }
+        return R;
+    }
+
+    function ecc_add (Px,Py,Qx,Qy)
+    {//P+Q
+        var m = bigInt();
+        if (Px.equals(bigInt(-1))&&Py.equals(bigInt(-1))){
+            var array = [Qx, Qy];
+            return array;
+        }
+        if (Px.equals(Qx)&&Py.equals(Qy)){
+            //m=(3*x(P)^2+a)*(2*y(P))^(-1)%p
+            m=bigInt(3).multiply(Px.modPow(bigInt(2),p)).add(a).multiply(bigInt(2).multiply(Py).modInv(p)).mod(p);
+        }
+        else{
+            //m=(y(Q)-y(P))*(x(Q)-x(P))^(-1)%p
+            m=Qy.subtract(Py).multiply(Qx.subtract(Px).modInv(p)).mod(p);
+        }
+        //x(R)=m^2-x(P)-x(Q)%p
+        var xR=m.modPow(bigInt(2),p).subtract(Px).subtract(Qx).mod(p);
+        //y(R)=m*(x(P)-x(R))-y(P)%p
+        var yR=m.multiply(Px.subtract(xR)).subtract(Py).mod(p);
+        if(!yR.isPositive())yR=yR.add(p);
+        var array = [xR, yR];
+        return array;
+    }
+</script>
+</html>
