@@ -100,6 +100,7 @@
         }
         //x(R)=m^2-x(P)-x(Q)%p
         var xR=m.modPow(bigInt(2),p).subtract(Px).subtract(Qx).mod(p);
+        if(!xR.isPositive())xR=xR.add(p);
         //y(R)=m*(x(P)-x(R))-y(P)%p
         var yR=m.multiply(Px.subtract(xR)).subtract(Py).mod(p);
         if(!yR.isPositive())yR=yR.add(p);
